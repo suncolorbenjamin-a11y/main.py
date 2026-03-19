@@ -1,0 +1,64 @@
+import pandas as pd
+from datetime import datetime
+
+def calculate_subject_progress(tasks):
+    """計算單科總進度 (防爆版：同時支援新舊格式)"""
+    if not tasks: return 0
+    total_w = 0
+    earned_w = 0
+    
+    for t in tasks.values():
+        # 判斷是新格式(字典)還是舊格式(清單)
+        if isinstance(t, dict):
+            done, total, weight = t.get("done", 0), t.get("total", 0), t.get("weight", 1)
+        elif isinstance(t, list) and len(t) >= 3:
+            done, total, weight = t[0], t[1], t[2]
+        else:
+            continue
+            
+        if total > 0:
+            total_w += weight
+            earned_w += (done / total) * weight
+            
+    return (earned_w / total_w * 100) if total_w > 0 else 0
+
+def get_total_stats_by_type(subjects):
+    """分類統計：實戰看題數，內化看小時"""
+    stats = {"實戰演練": 0, "知識內化": 0.0} # 實戰用整數，內化用浮點數
+    for sub in subjects.values():
+        for t in sub.get("tasks", {}).values():
+            t_type = t.get("type", "知識內化")
+            # 根據新名稱分類
+            if "實戰" in t_type:
+                stats["實戰演練"] += int(t.get("done", 0))
+            else:
+                stats["知識內化"] += t.get("done", 0)
+    return stats
+
+def get_urgency_report(subjects):
+    """急迫性排序邏輯"""
+    now = datetime.now()
+    today_idx = now.weekday()
+    report = []
+    for name, info in subjects.items():
+        future_days = [d for d in info["schedule"] if d > today_idx]
+        days_diff = future_days[0] - today_idx if future_days else (6 - today_idx) + info["schedule"][0] + 1
+        hours_left = days_diff * 24
+        
+        progress = calculate_subject_progress(info.get("tasks", {}))
+        score = (100 - progress) / (hours_left + 1)
+        
+        report.append({
+            "name": name, "hours_left": hours_left, "progress": progress, "score": score,
+            "status": "🔴" if hours_left <= 24 and progress < 50 else ("🟡" if progress < 80 else "🟢")
+        })
+    return sorted(report, key=lambda x: x["score"], reverse=True)
+
+def get_history_chart_data(history):
+    if not history: return None
+    df = pd.DataFrame(history)
+    if "solved" in df.columns:
+        # 這裡的總產量是兩者數據的混合，僅作為綜合參考
+        df = df.rename(columns={"date": "日期", "solved": "綜合戰力指標"})
+        return df.set_index("日期")
+    return None

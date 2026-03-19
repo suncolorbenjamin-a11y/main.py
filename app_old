@@ -1,0 +1,123 @@
+import streamlit as st
+from datetime import datetime
+import data_engine, logic_engine, config_manager
+
+st.set_page_config(page_title="🛡️ 考研戰情室", layout="wide")
+
+# 初始化資料
+if 'db' not in st.session_state:
+    st.session_state.db = data_engine.load_data()
+db = st.session_state.db
+
+# --- 側邊欄 (科目與任務管理) ---
+with st.sidebar:
+    st.header("⚙️ 系統設定")
+    
+    with st.expander("➕ 科目管理"):
+        sub_n = st.text_input("新科目名稱")
+        days = st.multiselect("上課日", ["週一", "週二", "週三", "週四", "週五", "週六", "週日"])
+        # 新增時間選擇器
+        c_time = st.time_input("上課時間點", value=datetime.strptime("09:00", "%H:%M").time())
+        
+        day_map = {"週一":0, "週二":1, "週三":2, "週四":3, "週五":4, "週六":5, "週日":6}
+        if st.button("確認新增"):
+            if sub_n and days:
+                # 將選擇的時間轉為字串存入
+                config_manager.add_subject(db, sub_n, [day_map[d] for d in days], c_time.strftime("%H:%M"))
+                st.rerun()
+        st.divider()
+        del_sub = st.selectbox("移除科目", ["請選擇"] + list(db["subjects"].keys()))
+        if st.button("確認刪除科目") and del_sub != "請選擇":
+            config_manager.delete_subject(db, del_sub); st.rerun()
+
+    with st.expander("📝 任務設定/修改"):
+        if db["subjects"]:
+            sub_t = st.selectbox("選擇科目", list(db["subjects"].keys()), key="sub_t")
+            t_name = st.text_input("任務名稱")
+            t_type = st.radio("任務性質", ["實戰演練", "知識內化"], horizontal=True)
+            if t_type == "實戰演練":
+                t_total = st.number_input("目標題數", min_value=1, value=20, step=1)
+            else:
+                t_total = st.number_input("目標小時 (hr)", min_value=0.5, value=2.0, step=0.5)
+            t_weight = st.slider("重要權重", 1, 5, 3)
+            if st.button("儲存任務"):
+                config_manager.add_or_update_task(db, sub_t, t_name, t_total, t_weight, t_type)
+                st.rerun()
+            st.divider()
+            if db["subjects"][sub_t]["tasks"]:
+                del_t = st.selectbox("刪除特定任務", list(db["subjects"][sub_t]["tasks"].keys()))
+                if st.button("刪除任務"):
+                    config_manager.delete_task(db, sub_t, del_t); st.rerun()
+        else:
+            st.write("請先新增科目")
+
+    st.divider()
+    if st.button("📊 結算並重置本週", type="primary", use_container_width=True):
+        config_manager.reset_week(db); st.rerun()
+
+# --- 主畫面 ---
+st.title("🛡️ 學業戰情總表")
+
+# 1. 頂部產量統計
+stats = logic_engine.get_total_stats_by_type(db["subjects"])
+c1, c2 = st.columns(2)
+c1.metric("⚔️ 實戰演練總量", f"{int(stats['實戰演練'])} 題")
+c2.metric("🧠 知識內化總量", f"{stats['知識內化']:.1f} hr")
+st.write("---")
+
+# 2. 壓力排序與即時更新區
+urg_list = logic_engine.get_urgency_report(db["subjects"])
+
+for item in urg_list:
+    # 建立外層容器確保視覺整潔
+    with st.container():
+        col1, col2, col3 = st.columns([2, 3, 1])
+        col1.subheader(f"{item['status']} {item['name']}")
+        col1.caption(f"🕒 剩餘約 {item['hours_left']} 小時")
+        col2.progress(item['progress'] / 100)
+        
+        # 點擊按鈕切換 st.session_state
+        if col3.button("更新進度", key=f"btn_{item['name']}"):
+            if st.session_state.get('edit_target') == item['name']:
+                st.session_state.edit_target = None # 再次點擊就收起來
+            else:
+                st.session_state.edit_target = item['name']
+            st.rerun()
+
+        # 【改動二：介面出現在該科目底下】
+        if st.session_state.get('edit_target') == item['name']:
+            tasks = db["subjects"][item['name']].get("tasks", {})
+            for tn, tv in tasks.items():
+                # 【改動一：排列順序改為 [文字, 減, 加]】
+                c_txt, c_min, c_add = st.columns([2, 1, 1])
+                
+                is_dict = isinstance(tv, dict)
+                t_type = tv.get("type", "知識內化") if is_dict else "知識內化"
+                unit = "題" if t_type == "實戰演練" else "hr"
+                step = 1 if t_type == "實戰演練" else 0.5
+                done = tv.get("done", 0.0) if is_dict else tv[0]
+                total = tv.get("total", 1.0) if is_dict else tv[1]
+                
+                # 文字在左
+                c_txt.write(f"**{tn}** ({done}/{total} {unit})")
+                
+                # 減號在中
+                if c_min.button(f"➖{step}", key=f"m_{tn}"):
+                    db["subjects"][item['name']]["tasks"][tn]["done"] = max(0.0, done - step)
+                    data_engine.save_data(db); st.rerun()
+                
+                # 加號在右
+                if c_add.button(f"➕{step}", key=f"a_{tn}"):
+                    db["subjects"][item['name']]["tasks"][tn]["done"] = min(total, done + step)
+                    data_engine.save_data(db); st.rerun()
+            st.write("") # 留一點空白間距
+
+    st.divider()
+
+# 4. 歷屆趨勢圖
+st.header("📊 歷屆戰報")
+h_df = logic_engine.get_history_chart_data(db["history"])
+if h_df is not None:
+    st.line_chart(h_df)
+else:
+    st.info("💡 目前尚無紀錄。點擊左側「結算」後即會產生數據。")

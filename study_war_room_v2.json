@@ -1,0 +1,162 @@
+{
+    "subjects": {
+        "線性代數": {
+            "schedule": [
+                2,
+                4
+            ],
+            "tasks": {
+                "複習": {
+                    "done": 0.5,
+                    "total": 3.0,
+                    "weight": 4,
+                    "type": "知識內化"
+                },
+                "寫題目": {
+                    "done": 2,
+                    "total": 15,
+                    "weight": 4,
+                    "type": "實戰演練"
+                }
+            },
+            "class_time": "10:00",
+            "last_reset_date": "2026-03-18"
+        },
+        "微積分": {
+            "schedule": [
+                1,
+                3
+            ],
+            "tasks": {
+                "預習": {
+                    "done": 0.5,
+                    "total": 2.0,
+                    "weight": 5,
+                    "type": "知識內化"
+                },
+                "題目分析": {
+                    "done": 0.5,
+                    "total": 0.5,
+                    "weight": 3,
+                    "type": "知識內化"
+                },
+                "題目": {
+                    "done": 4,
+                    "total": 20,
+                    "weight": 3,
+                    "type": "實戰演練"
+                }
+            },
+            "class_time": "10:00",
+            "last_reset_date": "2026-03-17"
+        },
+        "數值分析": {
+            "schedule": [
+                3
+            ],
+            "tasks": {
+                "複習": {
+                    "done": 1.0,
+                    "total": 1.0,
+                    "weight": 4,
+                    "type": "知識內化"
+                },
+                "寫程式": {
+                    "done": 0,
+                    "total": 5,
+                    "weight": 3,
+                    "type": "實戰演練"
+                }
+            },
+            "class_time": "13:00"
+        },
+        "財務管理": {
+            "schedule": [
+                2
+            ],
+            "tasks": {
+                "作業": {
+                    "done": 0,
+                    "total": 5,
+                    "weight": 3,
+                    "type": "實戰演練"
+                },
+                "複習": {
+                    "done": 0,
+                    "total": 1.0,
+                    "weight": 4,
+                    "type": "知識內化"
+                }
+            },
+            "class_time": "13:00",
+            "last_reset_date": "2026-03-18"
+        },
+        "計量經濟學": {
+            "schedule": [
+                1
+            ],
+            "tasks": {
+                "複習": {
+                    "done": 0.5,
+                    "total": 1.0,
+                    "weight": 4,
+                    "type": "知識內化"
+                },
+                "寫程式": {
+                    "done": 0,
+                    "total": 2,
+                    "weight": 4,
+                    "type": "實戰演練"
+                }
+            },
+            "class_time": "13:00",
+            "last_reset_date": "2026-03-17"
+        },
+        "英文": {
+            "schedule": [
+                4
+            ],
+            "tasks": {},
+            "class_time": "13:00"
+        }
+    },
+    "history": [
+        {
+            "date": "2026-03-18",
+            "subject": "線性代數",
+            "solved": 0
+        },
+        {
+            "date": "2026-03-17",
+            "subject": "微積分",
+            "solved": 6.0
+        },
+        {
+            "date": "2026-03-16",
+            "subject": "財務管理",
+            "solved": 0
+        },
+        {
+            "date": "2026-03-17",
+            "subject": "計量經濟學",
+            "solved": 0
+        },
+        {
+            "date": "2026-03-18",
+            "solved": 0
+        },
+        {
+            "date": "2026-03-18",
+            "solved": 0
+        },
+        {
+            "date": "2026-03-18",
+            "solved": 10.0
+        },
+        {
+            "date": "2026-03-18",
+            "subject": "財務管理",
+            "solved": 1
+        }
+    ]
+}

@@ -1,0 +1,57 @@
+import data_engine
+from datetime import datetime
+
+def add_subject(data, name, schedule):
+    if name and name not in data["subjects"]:
+        data["subjects"][name] = {"schedule": schedule, "tasks": {}}
+        data_engine.save_data(data)
+        return True
+    return False
+
+def delete_subject(data, name):
+    if name in data["subjects"]:
+        del data["subjects"][name]
+        data_engine.save_data(data)
+        return True
+    return False
+
+def add_or_update_task(data, subject_name, task_name, total, weight, t_type):
+    """小時制任務：支援新增與修改"""
+    if subject_name in data["subjects"]:
+        # 保留已完成進度，只更新設定
+        current_done = data["subjects"][subject_name]["tasks"].get(task_name, {"done": 0})["done"]
+        data["subjects"][subject_name]["tasks"][task_name] = {
+            "done": current_done, "total": total, "weight": weight, "type": t_type
+        }
+        data_engine.save_data(data)
+        return True
+    return False
+
+def delete_task(data, subject_name, task_name):
+    if subject_name in data["subjects"] and task_name in data["subjects"][subject_name]["tasks"]:
+        del data["subjects"][subject_name]["tasks"][task_name]
+        data_engine.save_data(data)
+        return True
+    return False
+
+def reset_week(data):
+    """結算並將 done 歸零"""
+    total_solved = sum(t["done"] for s in data["subjects"].values() for t in s["tasks"].values())
+    report = {"date": str(datetime.now().date()), "solved": total_solved}
+    data["history"].append(report)
+    for sub in data["subjects"]:
+        for t in data["subjects"][sub]["tasks"]:
+            data["subjects"][sub]["tasks"][t]["done"] = 0
+    data_engine.save_data(data)
+    
+def add_subject(data, name, schedule, class_time):
+    """新增科目，包含上課時間 (格式如 "09:00")"""
+    if name and name not in data["subjects"]:
+        data["subjects"][name] = {
+            "schedule": schedule, 
+            "class_time": str(class_time), # 存成字串 "HH:MM"
+            "tasks": {}
+        }
+        data_engine.save_data(data)
+        return True
+    return False    
