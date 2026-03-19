@@ -2,6 +2,21 @@ import streamlit as st
 import json
 import os
 
+DEBUG_MODE = True  # 偵錯完畢後，只需改為 False
+
+if st.button("➕1"):
+    if DEBUG_MODE:
+        # 這是偵錯版：會噴出紅字錯誤，幫助你抓鬼
+        try:
+            save_data(data)
+            st.toast("偵錯：存檔成功")
+        except Exception as e:
+            st.error(f"偵錯報錯：{e}")
+    else:
+        # 這是正式版：維持簡潔，失敗也不會跳紅字
+        save_data(data)
+        st.rerun()
+        
 # --- 環境安全檢查（修正版） ---
 def ensure_gcp_key():
     # 1. 如果本地已經有檔案了，就直接過關
