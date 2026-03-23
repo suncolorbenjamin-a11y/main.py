@@ -48,7 +48,6 @@ def load_data():
 
 def save_data(data): # 👈 參數名稱對齊你的 "data"
     """將資料同步回雲端試算表"""
-    try:
         client = get_client()
         sh = client.open("study-tracking-center")
         
@@ -76,8 +75,7 @@ def save_data(data): # 👈 參數名稱對齊你的 "data"
             ws_hist = sh.worksheet("history_data")
             ws_hist.clear()
             ws_hist.update([list(data["history"][0].keys())] + [list(r.values()) for r in data["history"]])
-    except Exception as e:
-        print(f"雲端儲存失敗: {e}")
+
 
 def log_activity(data, subject, solved_increment): # 👈 參數完全對齊你的舊代碼
     """即時紀錄產出到雲端 history 分頁"""
